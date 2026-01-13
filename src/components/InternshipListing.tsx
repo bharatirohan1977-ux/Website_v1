@@ -9,7 +9,8 @@ interface InternshipListingProps {
 }
 
 export default function InternshipListing({ onEnroll }: InternshipListingProps) {
-  const [expandedId, setExpandedId] = useState<string | null>(internships[0]?.id || null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const activeInternships = internships.filter(i => i.status === 'active');
   const upcomingInternships = internships.filter(i => i.status === 'upcoming');
@@ -36,12 +37,14 @@ export default function InternshipListing({ onEnroll }: InternshipListingProps) 
               {activeInternships.map((internship) => (
                 <button
                   key={internship.id}
-                  onClick={() => setExpandedId(internship.id)}
-                  className={`group text-left rounded-2xl shadow-lg transition-all duration-300 overflow-hidden border-2 transform ${
-                    expandedId === internship.id
+                  onClick={() => {
+                    setExpandedId(internship.id);
+                    setIsModalOpen(true);
+                  }}
+                  className={`group text-left rounded-2xl shadow-lg transition-all duration-300 overflow-hidden border-2 transform ${expandedId === internship.id
                       ? 'border-amber-500 scale-105 md:scale-100'
                       : 'border-transparent hover:border-amber-500 hover:shadow-xl'
-                  }`}
+                    }`}
                 >
                   <div className="bg-gradient-to-br from-amber-500 to-amber-600 p-6 text-white">
                     <div className="flex items-start justify-between mb-4">
@@ -80,11 +83,33 @@ export default function InternshipListing({ onEnroll }: InternshipListingProps) 
               )}
             </div>
 
-            {expandedInternship && (
-              <InternshipDetail
-                internship={expandedInternship}
-                onEnroll={onEnroll}
-              />
+            {/* Inline detail removed; use modal instead */}
+            {isModalOpen && expandedInternship && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/50" onClick={() => setIsModalOpen(false)} />
+                <div className="relative max-w-3xl w-full mx-4">
+                  <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+                    <div className="p-4 flex justify-end">
+                      <button
+                        onClick={() => setIsModalOpen(false)}
+                        className="text-slate-600 hover:text-slate-900 font-bold"
+                        aria-label="Close details"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <div className="p-6">
+                      <InternshipDetail
+                        internship={expandedInternship}
+                        onEnroll={(intern) => {
+                          setIsModalOpen(false);
+                          onEnroll(intern);
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         )}
