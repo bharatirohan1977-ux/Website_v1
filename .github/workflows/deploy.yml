@@ -32,6 +32,8 @@ jobs:
         run: npm ci
 
       - name: Build
+        env:
+          VITE_ENROLLMENT_WEBHOOK: ${{ secrets.ENROLLMENT_WEBHOOK }}
         run: npm run build
 
       - name: Setup Pages

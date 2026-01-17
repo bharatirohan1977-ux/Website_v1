@@ -8,6 +8,8 @@ interface NavigationProps {
 export default function Navigation({ onNavigateToPayment }: NavigationProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  // Ensure logo path works with Vite `base` (GitHub Pages subpath)
+  const logoSrc = `${import.meta.env.BASE_URL}Final_Logo_v1.png`;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -33,9 +35,9 @@ export default function Navigation({ onNavigateToPayment }: NavigationProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <div className="flex-shrink-0 flex items-center gap-3">
-            <img src="/final_logo.png" alt="Try2Fly logo" className="h-12 w-12 object-contain" />
+            <img src={logoSrc} alt="UNOFFICIALOFFICE logo" className="h-16 w-16 object-contain" />
             <h1 className="text-2xl font-bold text-amber-500">
-              Try2Fly
+              UNOFFICIALOFFICE
             </h1>
           </div>
 

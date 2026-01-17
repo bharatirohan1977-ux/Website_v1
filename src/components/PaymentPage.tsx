@@ -17,6 +17,8 @@ export default function PaymentPage({ onBack, internship }: PaymentPageProps) {
     year: ''
   });
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -29,24 +31,46 @@ export default function PaymentPage({ onBack, internship }: PaymentPageProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!internship) return;
+    const enrollmentData = {
+      ...formData,
+      internshipId: internship.id,
+      internshipTitle: internship.title,
+      enrolledAt: new Date().toISOString()
+    };
+
+    const webhookUrl = import.meta.env.VITE_ENROLLMENT_WEBHOOK as string | undefined;
 
     try {
-      const enrollmentData = {
-        ...formData,
-        internshipId: internship.id,
-        internshipTitle: internship.title,
-        enrolledAt: new Date().toISOString()
-      };
+      setLoading(true);
+      setErrorMessage(null);
 
-      console.log('Enrollment data:', enrollmentData);
+      if (webhookUrl) {
+        const resp = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(enrollmentData),
+        });
+
+        if (!resp.ok) {
+          const text = await resp.text();
+          throw new Error(`Webhook error: ${resp.status} ${text}`);
+        }
+      } else {
+        // No webhook configured; log locally
+        console.warn('No VITE_ENROLLMENT_WEBHOOK configured. Enrollment data:', enrollmentData);
+      }
+
       setSubmitted(true);
 
       setTimeout(() => {
         setSubmitted(false);
         onBack();
       }, 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting form:', error);
+      setErrorMessage(error?.message || 'Submission failed');
+    } finally {
+      setLoading(false);
     }
   };
 

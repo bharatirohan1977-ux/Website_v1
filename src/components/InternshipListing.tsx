@@ -42,8 +42,8 @@ export default function InternshipListing({ onEnroll }: InternshipListingProps) 
                     setIsModalOpen(true);
                   }}
                   className={`group text-left rounded-2xl shadow-lg transition-all duration-300 overflow-hidden border-2 transform ${expandedId === internship.id
-                      ? 'border-amber-500 scale-105 md:scale-100'
-                      : 'border-transparent hover:border-amber-500 hover:shadow-xl'
+                    ? 'border-amber-500 scale-105 md:scale-100'
+                    : 'border-transparent hover:border-amber-500 hover:shadow-xl'
                     }`}
                 >
                   <div className="bg-gradient-to-br from-amber-500 to-amber-600 p-6 text-white">
@@ -87,8 +87,13 @@ export default function InternshipListing({ onEnroll }: InternshipListingProps) 
             {isModalOpen && expandedInternship && (
               <div className="fixed inset-0 z-50 flex items-center justify-center">
                 <div className="absolute inset-0 bg-black/50" onClick={() => setIsModalOpen(false)} />
-                <div className="relative max-w-3xl w-full mx-4">
-                  <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+                <div className="relative max-w-4xl w-full mx-4">
+                  <div
+                    className="bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[80vh]"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Internship details"
+                  >
                     <div className="p-4 flex justify-end">
                       <button
                         onClick={() => setIsModalOpen(false)}
@@ -98,7 +103,7 @@ export default function InternshipListing({ onEnroll }: InternshipListingProps) 
                         ✕
                       </button>
                     </div>
-                    <div className="p-6">
+                    <div className="p-6 overflow-y-auto max-h-[72vh]">
                       <InternshipDetail
                         internship={expandedInternship}
                         onEnroll={(intern) => {
