@@ -44,21 +44,35 @@ export default function PaymentPage({ onBack, internship }: PaymentPageProps) {
       setLoading(true);
       setErrorMessage(null);
 
-      if (webhookUrl) {
-        const resp = await fetch(webhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(enrollmentData),
-        });
+if (webhookUrl) {
+  const formBody = new URLSearchParams();
 
-        if (!resp.ok) {
-          const text = await resp.text();
-          throw new Error(`Webhook error: ${resp.status} ${text}`);
-        }
-      } else {
-        // No webhook configured; log locally
-        console.warn('No VITE_ENROLLMENT_WEBHOOK configured. Enrollment data:', enrollmentData);
-      }
+  Object.entries(enrollmentData).forEach(([key, value]) => {
+    formBody.append(key, String(value));
+  });
+
+  // 🔥 Fire-and-forget submission (required for Google Apps Script)
+  setSubmitted(true);
+  await fetch(webhookUrl, {
+    method: 'POST',
+    mode: 'no-cors',
+    body: formBody,
+  });
+
+  // ✅ Assume success if fetch did not throw
+  
+
+  setTimeout(() => {
+    setSubmitted(false);
+    onBack();
+  }, 3000);
+
+} else {
+  console.warn(
+    'No VITE_ENROLLMENT_WEBHOOK configured. Enrollment data:',
+    enrollmentData
+  );
+}
 
       setSubmitted(true);
 

@@ -10,26 +10,24 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-/* ✅ CORS FIX */
+/* CORS */
 app.use(cors({
-  origin: '*',     // change to your domain in prod
-  methods: ['GET', 'POST'],
+  origin: '*', // restrict in prod
+  methods: ['POST', 'GET'],
   allowedHeaders: ['Content-Type']
 }));
 
 app.use(express.json());
 
 const CREDENTIALS_PATH = path.join(__dirname, 'credentials.json');
-const SPREADSHEET_ID = process.env.VITE_GOOGLE_SHEET_ID;
+const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID;
 
-/* Google Sheets Init */
+/* Google Sheets init */
 async function getSheets() {
-  const credentialsData = JSON.parse(
-    fs.readFileSync(CREDENTIALS_PATH, 'utf8')
-  );
+  const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH, 'utf8'));
 
   const auth = new google.auth.GoogleAuth({
-    credentials: credentialsData,
+    credentials,
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   });
 
@@ -40,7 +38,7 @@ async function getSheets() {
 app.post('/api/enroll', async (req, res) => {
   try {
     if (!SPREADSHEET_ID) {
-      return res.status(500).json({ error: 'Sheet ID not configured' });
+      return res.status(500).json({ error: 'GOOGLE_SHEET_ID not set' });
     }
 
     const {
@@ -50,11 +48,14 @@ app.post('/api/enroll', async (req, res) => {
       phone,
       college,
       year,
-      internshipTitle,
+      program,
+      mode,
+      duration,
+      category,
       enrolledAt
     } = req.body;
 
-    if (!firstName || !email || !internshipTitle) {
+    if (!firstName || !email || !program) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -62,7 +63,7 @@ app.post('/api/enroll', async (req, res) => {
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'Sheet1!A:H',
+      range: 'Sheet1!A:K',
       valueInputOption: 'USER_ENTERED',
       requestBody: {
         values: [[
@@ -72,7 +73,10 @@ app.post('/api/enroll', async (req, res) => {
           phone || '',
           college || '',
           year || '',
-          internshipTitle,
+          program,
+          mode || '',
+          duration || '',
+          category || '',
           new Date(enrolledAt || Date.now())
             .toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
         ]]
@@ -81,18 +85,18 @@ app.post('/api/enroll', async (req, res) => {
 
     res.json({ success: true });
 
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
+  } catch (err) {
+    console.error('Enroll error:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 
-/* Health */
-app.get('/health', (req, res) => {
+/* Health check */
+app.get('/health', (_, res) => {
   res.json({ status: 'ok' });
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
 });

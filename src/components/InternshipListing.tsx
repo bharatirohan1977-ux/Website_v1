@@ -143,3 +143,11 @@ export default function InternshipListing({ onEnroll }: InternshipListingProps) 
     </section>
   );
 }
+
+export interface Internship {
+  id: string;
+  title: string;
+  mode: string;
+  duration: string;
+  category: string;
+}
