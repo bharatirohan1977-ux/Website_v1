@@ -28,65 +28,52 @@ export default function PaymentPage({ onBack, internship }: PaymentPageProps) {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!internship) return;
-    const enrollmentData = {
-      ...formData,
-      internshipId: internship.id,
-      internshipTitle: internship.title,
-      enrolledAt: new Date().toISOString()
-    };
+const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!internship || loading) return;
 
-    const webhookUrl = import.meta.env.VITE_ENROLLMENT_WEBHOOK as string | undefined;
+  setLoading(true);
+  setErrorMessage(null);
 
-    try {
-      setLoading(true);
-      setErrorMessage(null);
+  const enrollmentData = {
+    ...formData,
+    internshipId: internship.id,
+    internshipTitle: internship.title,
+    enrolledAt: new Date().toISOString(),
+  };
 
-if (webhookUrl) {
-  const formBody = new URLSearchParams();
+  const webhookUrl = import.meta.env.VITE_ENROLLMENT_WEBHOOK as string | undefined;
 
-  Object.entries(enrollmentData).forEach(([key, value]) => {
-    formBody.append(key, String(value));
-  });
+  if (webhookUrl) {
+    const formBody = new URLSearchParams();
 
-  // 🔥 Fire-and-forget submission (required for Google Apps Script)
+    Object.entries(enrollmentData).forEach(([key, value]) => {
+      formBody.append(key, String(value));
+    });
+
+    // 🔑 routing key for Apps Script
+    formBody.append("type", "enroll");
+
+    // 🚀 fire-and-forget (do NOT await)
+    fetch(webhookUrl, {
+      method: "POST",
+      mode: "no-cors",
+      body: formBody,
+    });
+  } else {
+    console.warn("No VITE_ENROLLMENT_WEBHOOK configured", enrollmentData);
+  }
+
+  // ✅ instant UX feedback
   setSubmitted(true);
-  await fetch(webhookUrl, {
-    method: 'POST',
-    mode: 'no-cors',
-    body: formBody,
-  });
-
-  // ✅ Assume success if fetch did not throw
-  
 
   setTimeout(() => {
     setSubmitted(false);
+    setLoading(false);
     onBack();
   }, 3000);
+};
 
-} else {
-  console.warn(
-    'No VITE_ENROLLMENT_WEBHOOK configured. Enrollment data:',
-    enrollmentData
-  );
-}
-
-      setSubmitted(true);
-
-      setTimeout(() => {
-        setSubmitted(false);
-        onBack();
-      }, 3000);
-    } catch (error: any) {
-      console.error('Error submitting form:', error);
-      setErrorMessage(error?.message || 'Submission failed');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (!internship) {
     return (

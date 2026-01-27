@@ -1,6 +1,80 @@
 import { Mail, Phone, MapPin, Linkedin } from 'lucide-react';
+import { useState } from 'react';
 
 export default function Contact() {
+  // 🔹 state added (no UI change)
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    message: ''
+  });
+
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // 🔹 change handler (maps by input id)
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+
+  // 🔹 submit handler (same Apps Script as enrollment)
+  const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+
+  // 🔒 validation (same idea as PaymentPage)
+  if (
+    !formData.name.trim() ||
+    !formData.email.trim() ||
+    !formData.phone.trim() ||
+    !formData.message.trim()
+  ) {
+    setError('Please fill all the fields before submitting.');
+    return;
+  }
+
+  // clear error if valid
+  setError(null);
+
+  const webhookUrl = import.meta.env.VITE_ENROLLMENT_WEBHOOK as string;
+
+  const formBody = new URLSearchParams();
+  formBody.append('type', 'contact');
+  formBody.append('name', formData.name);
+  formBody.append('email', formData.email);
+  formBody.append('phone', formData.phone);
+  formBody.append('message', formData.message);
+
+  fetch(webhookUrl, {
+    method: 'POST',
+    mode: 'no-cors',
+    body: formBody
+  });
+
+  // ✅ show success popup only if valid
+  setShowPopup(true);
+
+  setTimeout(() => {
+    setShowPopup(false);
+  }, 4000);
+
+  // reset form
+  setFormData({
+    name: '',
+    email: '',
+    phone: '',
+    message: ''
+  });
+};
+
+  const [showPopup, setShowPopup] = useState(false);
+
   return (
     <section id="contact" className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -15,6 +89,7 @@ export default function Contact() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-12">
+          {/* LEFT SIDE — UNCHANGED */}
           <div className="space-y-8">
             <div>
               <h3 className="text-3xl font-bold text-slate-900 mb-6">Contact Information</h3>
@@ -83,9 +158,22 @@ export default function Contact() {
             </div>
           </div>
 
+          {/* RIGHT SIDE — UI SAME, FUNCTIONAL */}
           <div className="bg-slate-50 rounded-2xl p-8 border-2 border-slate-200">
             <h3 className="text-2xl font-bold text-slate-900 mb-6">Send us a Message</h3>
-            <form className="space-y-6">
+
+            {submitted && (
+              <p className="mb-4 text-green-600 font-semibold text-center">
+                Message sent successfully!
+              </p>
+            )}
+            {error && (
+  <p className="mb-4 text-red-600 font-semibold text-center">
+    {error}
+  </p>
+)}
+
+            <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
                 <label htmlFor="name" className="block text-sm font-semibold text-slate-700 mb-2">
                   Full Name
@@ -93,6 +181,8 @@ export default function Contact() {
                 <input
                   type="text"
                   id="name"
+                  value={formData.name}
+                  onChange={handleChange}
                   className="w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:border-amber-500 focus:outline-none transition-colors"
                   placeholder="Your name"
                 />
@@ -105,6 +195,8 @@ export default function Contact() {
                 <input
                   type="email"
                   id="email"
+                  value={formData.email}
+                  onChange={handleChange}
                   className="w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:border-amber-500 focus:outline-none transition-colors"
                   placeholder="your.email@example.com"
                 />
@@ -117,6 +209,8 @@ export default function Contact() {
                 <input
                   type="tel"
                   id="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
                   className="w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:border-amber-500 focus:outline-none transition-colors"
                   placeholder="+91 XXXXXXXXXX"
                 />
@@ -129,6 +223,8 @@ export default function Contact() {
                 <textarea
                   id="message"
                   rows={5}
+                  value={formData.message}
+                  onChange={handleChange}
                   className="w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:border-amber-500 focus:outline-none transition-colors resize-none"
                   placeholder="Tell us about your interest in the program..."
                 ></textarea>
@@ -156,6 +252,32 @@ export default function Contact() {
           </div>
         </div>
       </footer>
+      {/* ✅ SUCCESS POPUP */}
+{showPopup && (
+  <div className="fixed inset-0 flex items-center justify-center z-50">
+    <div className="bg-white rounded-2xl shadow-2xl px-8 py-6 flex flex-col items-center gap-4">
+      <div className="bg-green-500 text-white rounded-full w-16 h-16 flex items-center justify-center">
+        <svg
+          className="w-8 h-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M5 13l4 4L19 7"
+          />
+        </svg>
+      </div>
+
+      <p className="text-lg font-semibold text-slate-900">
+        Message sent successfully!
+      </p>
+    </div>
+  </div>
+)}
     </section>
   );
 }

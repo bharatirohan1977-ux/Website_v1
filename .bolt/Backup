@@ -1,0 +1,59 @@
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!internship) return;
+    const enrollmentData = {
+      ...formData,
+      internshipId: internship.id,
+      internshipTitle: internship.title,
+      enrolledAt: new Date().toISOString()
+    };
+
+    const webhookUrl = import.meta.env.VITE_ENROLLMENT_WEBHOOK as string | undefined;
+
+    try {
+      setLoading(true);
+      setErrorMessage(null);
+
+if (webhookUrl) {
+  const formBody = new URLSearchParams();
+
+  Object.entries(enrollmentData).forEach(([key, value]) => {
+    formBody.append(key, String(value));
+  });
+  formBody.append("type", "enroll");
+  // 🔥 Fire-and-forget submission (required for Google Apps Script)
+  setSubmitted(true);
+  await fetch(webhookUrl, {
+    method: 'POST',
+    mode: 'no-cors',
+    body: formBody,
+  });
+
+  // ✅ Assume success if fetch did not throw
+  
+
+  setTimeout(() => {
+    setSubmitted(false);
+    onBack();
+  }, 3000);
+
+} else {
+  console.warn(
+    'No VITE_ENROLLMENT_WEBHOOK configured. Enrollment data:',
+    enrollmentData
+  );
+}
+
+      setSubmitted(true);
+
+      setTimeout(() => {
+        setSubmitted(false);
+        onBack();
+      }, 3000);
+    } catch (error: any) {
+      console.error('Error submitting form:', error);
+      setErrorMessage(error?.message || 'Submission failed');
+    } finally {
+      setLoading(false);
+    }
+  };
