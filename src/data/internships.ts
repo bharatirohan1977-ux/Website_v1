@@ -36,28 +36,23 @@ export const internships: Internship[] = [
       },
       {
         number: '02',
-        title: 'ARM Architecture & Design',
-        description: 'Deep dive into ARM architecture fundamentals and embedded system design principles'
-      },
-      {
-        number: '03',
         title: 'Driver Development & Workflow Tools',
         description: 'Master driver development with hands-on experience using GitHub, Jira, and Agile methodologies'
       },
       {
-        number: '04',
+        number: '03',
         title: 'Clean Coding & Best Practices',
         description: 'Learn industry-standard coding practices for maintainable, scalable embedded software'
       },
       {
-        number: '05',
+        number: '04',
         title: 'AI for 10X Productivity',
         description: 'Leverage AI-assisted development to accelerate your coding and problem-solving capabilities'
       },
       {
-        number: '06',
+        number: '05',
         title: 'Career Growth Enablement',
-        description: 'Build your professional profile with LinkedIn optimization and interview preparation'
+        description: 'Build your professional profile with LinkedIn optimization'
       }
     ],
     status: 'active'
