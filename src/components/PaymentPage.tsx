@@ -1,6 +1,7 @@
 import { ArrowLeft, Mail, User, Phone, Building2, BookOpen } from 'lucide-react';
+import { internships } from '../data/internships';
 import { Internship } from '../types/internship';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface PaymentPageProps {
   onBack: () => void;
@@ -14,7 +15,8 @@ export default function PaymentPage({ onBack, internship }: PaymentPageProps) {
     email: '',
     phone: '',
     college: '',
-    year: ''
+    year: '',
+    programme: internship?.title ?? ''
   });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -28,44 +30,60 @@ export default function PaymentPage({ onBack, internship }: PaymentPageProps) {
     }));
   };
 
-const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (internship) {
+      setFormData(prev => ({
+        ...prev,
+        programme: internship.title
+      }));
+    }
+  }, [internship]);
+
+const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
-  if (!internship || loading) return;
+  if (loading) return;
 
   setLoading(true);
   setErrorMessage(null);
 
+  if (!formData.programme.trim()) {
+    setErrorMessage('Please select a programme.');
+    setLoading(false);
+    return;
+  }
+
+  const selectedProgram = internships.find(i => i.title === formData.programme);
   const enrollmentData = {
     ...formData,
-    internshipId: internship.id,
-    internshipTitle: internship.title,
+    internshipId: internship?.id ?? selectedProgram?.id ?? '',
+    internshipTitle: internship?.title ?? selectedProgram?.title ?? formData.programme,
     enrolledAt: new Date().toISOString(),
   };
 
   const webhookUrl = import.meta.env.VITE_ENROLLMENT_WEBHOOK as string | undefined;
 
-  if (webhookUrl) {
-    const formBody = new URLSearchParams();
-
-    Object.entries(enrollmentData).forEach(([key, value]) => {
-      formBody.append(key, String(value));
-    });
-
-    // 🔑 routing key for Apps Script
-    formBody.append("type", "enroll");
-
-    // 🚀 fire-and-forget (do NOT await)
-    fetch(webhookUrl, {
-      method: "POST",
-      mode: "no-cors",
-      body: formBody,
-    });
-  } else {
-    console.warn("No VITE_ENROLLMENT_WEBHOOK configured", enrollmentData);
+  if (!webhookUrl) {
+    setErrorMessage('Submission endpoint is not configured.');
+    setLoading(false);
+    console.warn('No VITE_ENROLLMENT_WEBHOOK configured', enrollmentData);
+    return;
   }
 
-  // ✅ instant UX feedback
+  const formBody = new URLSearchParams();
+  Object.entries(enrollmentData).forEach(([key, value]) => {
+    formBody.append(key, String(value));
+  });
+  formBody.append('type', 'enroll');
+
   setSubmitted(true);
+
+  fetch(webhookUrl, {
+    method: 'POST',
+    mode: 'no-cors',
+    body: formBody,
+  }).catch((error) => {
+    console.error('Enrollment submit failed', error);
+  });
 
   setTimeout(() => {
     setSubmitted(false);
@@ -74,22 +92,6 @@ const handleSubmit = (e: React.FormEvent) => {
   }, 3000);
 };
 
-
-  if (!internship) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-slate-900 mb-4">Please select a program first</h2>
-          <button
-            onClick={onBack}
-            className="bg-amber-500 text-white px-8 py-4 rounded-lg font-semibold hover:bg-amber-600 transition-all"
-          >
-            Back to Programs
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   if (submitted) {
     return (
@@ -102,7 +104,7 @@ const handleSubmit = (e: React.FormEvent) => {
           </div>
           <h2 className="text-3xl font-bold text-slate-900 mb-4">Enrollment Successful!</h2>
           <p className="text-slate-600 mb-2">Thank you for enrolling in</p>
-          <p className="text-xl font-semibold text-amber-500 mb-6">{internship.title}</p>
+          <p className="text-xl font-semibold text-amber-500 mb-6">{internship?.title ?? formData.programme}</p>
           <p className="text-slate-600">We'll contact you shortly with further details.</p>
         </div>
       </div>
@@ -125,33 +127,68 @@ const handleSubmit = (e: React.FormEvent) => {
             <h1 className="text-4xl font-bold mb-2">
               Complete Your <span className="text-amber-500">Enrollment</span>
             </h1>
-            <p className="text-slate-300 mb-4">
-              Program: <span className="font-semibold text-amber-400">{internship.title}</span>
-            </p>
+            {internship ? (
+              <p className="text-slate-300 mb-4">
+                Program: <span className="font-semibold text-amber-400">{internship.title}</span>
+              </p>
+            ) : (
+              <p className="text-slate-300 mb-4">
+                Select your programme from the dropdown below and complete your details.
+              </p>
+            )}
             <p className="text-slate-300">Join our program and start your journey to becoming industry-ready!</p>
           </div>
 
           <div className="p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="bg-amber-50 border-2 border-amber-200 rounded-lg p-6 mb-8">
-                <h3 className="text-lg font-semibold text-slate-900 mb-4">Program Details</h3>
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-sm text-slate-600">Duration</p>
-                    <p className="text-lg font-bold text-slate-900">{internship.duration}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-slate-600">Mode</p>
-                    <p className="text-lg font-bold text-slate-900">{internship.mode}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-slate-600">Category</p>
-                    <p className="text-lg font-bold text-slate-900">{internship.category}</p>
+              {internship && (
+                <div className="bg-amber-50 border-2 border-amber-200 rounded-lg p-6 mb-8">
+                  <h3 className="text-lg font-semibold text-slate-900 mb-4">Program Details</h3>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-sm text-slate-600">Duration</p>
+                      <p className="text-lg font-bold text-slate-900">{internship.duration}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-600">Mode</p>
+                      <p className="text-lg font-bold text-slate-900">{internship.mode}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-600">Category</p>
+                      <p className="text-lg font-bold text-slate-900">{internship.category}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               <h3 className="text-2xl font-bold text-slate-900">Your Information</h3>
+
+              {errorMessage && (
+                <p className="text-red-600 mb-4">{errorMessage}</p>
+              )}
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Programme
+                </label>
+                <div className="relative">
+                  <select
+                    name="programme"
+                    value={formData.programme}
+                    onChange={handleChange}
+                    required
+                    disabled={Boolean(internship)}
+                    className="w-full pl-4 pr-4 py-3 rounded-lg border-2 border-slate-300 focus:border-amber-500 focus:outline-none transition-colors appearance-none"
+                  >
+                    {!internship && <option value="">Select programme</option>}
+                    {internships.map((programme) => (
+                      <option key={programme.id} value={programme.title}>
+                        {programme.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div>

@@ -10,7 +10,6 @@ export default function Contact() {
     message: ''
   });
 
-  const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // 🔹 change handler (maps by input id)
@@ -25,53 +24,57 @@ export default function Contact() {
   };
 
   // 🔹 submit handler (same Apps Script as enrollment)
-  const handleSubmit = (e: React.FormEvent) => {
-  e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  // 🔒 validation (same idea as PaymentPage)
-  if (
-    !formData.name.trim() ||
-    !formData.email.trim() ||
-    !formData.phone.trim() ||
-    !formData.message.trim()
-  ) {
-    setError('Please fill all the fields before submitting.');
-    return;
-  }
+    if (
+      !formData.name.trim() ||
+      !formData.email.trim() ||
+      !formData.phone.trim() ||
+      !formData.message.trim()
+    ) {
+      setError('Please fill all the fields before submitting.');
+      return;
+    }
 
-  // clear error if valid
-  setError(null);
+    setError(null);
 
-  const webhookUrl = import.meta.env.VITE_ENROLLMENT_WEBHOOK as string;
+    const webhookUrl = import.meta.env.VITE_ENROLLMENT_WEBHOOK as string | undefined;
 
-  const formBody = new URLSearchParams();
-  formBody.append('type', 'contact');
-  formBody.append('name', formData.name);
-  formBody.append('email', formData.email);
-  formBody.append('phone', formData.phone);
-  formBody.append('message', formData.message);
+    if (!webhookUrl) {
+      setError('Submission endpoint is not configured.');
+      console.warn('No VITE_ENROLLMENT_WEBHOOK configured for contact form');
+      return;
+    }
 
-  fetch(webhookUrl, {
-    method: 'POST',
-    mode: 'no-cors',
-    body: formBody
-  });
+    const formBody = new URLSearchParams();
+    formBody.append('type', 'contact');
+    formBody.append('name', formData.name);
+    formBody.append('email', formData.email);
+    formBody.append('phone', formData.phone);
+    formBody.append('message', formData.message);
 
-  // ✅ show success popup only if valid
-  setShowPopup(true);
+    setShowPopup(true);
 
-  setTimeout(() => {
-    setShowPopup(false);
-  }, 4000);
+    fetch(webhookUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: formBody,
+    }).catch((fetchError) => {
+      console.error('Contact submit failed', fetchError);
+    });
 
-  // reset form
-  setFormData({
-    name: '',
-    email: '',
-    phone: '',
-    message: ''
-  });
-};
+    setTimeout(() => {
+      setShowPopup(false);
+    }, 4000);
+
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      message: ''
+    });
+  };
 
   const [showPopup, setShowPopup] = useState(false);
 
@@ -162,7 +165,7 @@ export default function Contact() {
           <div className="bg-slate-50 rounded-2xl p-8 border-2 border-slate-200">
             <h3 className="text-2xl font-bold text-slate-900 mb-6">Send us a Message</h3>
 
-            {submitted && (
+            {showPopup && (
               <p className="mb-4 text-green-600 font-semibold text-center">
                 Message sent successfully!
               </p>

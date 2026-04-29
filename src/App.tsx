@@ -22,7 +22,10 @@ function App() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navigation onNavigateToPayment={() => setCurrentPage('payment')} />
+      <Navigation onNavigateToPayment={() => {
+        setSelectedInternship(null);
+        setCurrentPage('payment');
+      }} />
       <Hero />
       <About />
       <InternshipListing onEnroll={handleEnroll} />
