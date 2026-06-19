@@ -4,6 +4,8 @@ export default function GithubSetup() {
   const [email, setEmail] = useState('');
   const [githubUsername, setGithubUsername] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -17,18 +19,35 @@ export default function GithubSetup() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const formData = new URLSearchParams();
+    setLoading(true);
+    setErrorMessage(null);
 
+    const webhookUrl = import.meta.env.VITE_ENROLLMENT_WEBHOOK as string | undefined;
+
+    if (!webhookUrl) {
+      setErrorMessage('Submission endpoint is not configured.');
+      setLoading(false);
+      return;
+    }
+
+    const formData = new URLSearchParams();
     formData.append('type', 'githubUpdate');
     formData.append('email', email);
     formData.append('githubUsername', githubUsername);
 
-    await fetch('YOUR_APPS_SCRIPT_URL', {
-      method: 'POST',
-      body: formData
-    });
+    try {
+      await fetch(webhookUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: formData
+      });
 
-    setSubmitted(true);
+      setSubmitted(true);
+    } catch (err) {
+      setErrorMessage('Failed to submit. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (submitted) {
@@ -57,6 +76,12 @@ export default function GithubSetup() {
         <p className="text-center text-slate-500 mb-8">
           Submit your GitHub username to access your learning repository.
         </p>
+
+        {errorMessage && (
+          <p className="text-red-600 text-center mb-4 font-semibold">
+            {errorMessage}
+          </p>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
 
@@ -90,9 +115,10 @@ export default function GithubSetup() {
 
           <button
             type="submit"
-            className="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-lg"
+            disabled={loading}
+            className="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-lg disabled:opacity-50"
           >
-            Submit
+            {loading ? "Submitting..." : "Submit"}
           </button>
 
         </form>
