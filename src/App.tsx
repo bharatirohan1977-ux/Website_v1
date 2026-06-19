@@ -16,10 +16,12 @@ function App() {
     setSelectedInternship(internship);
     setCurrentPage('payment');
   };
-  
-  const path = window.location.pathname;
-  if (path === '/github-setup') {
-  return <GithubSetup />;
+
+  const params = new URLSearchParams(window.location.search);
+  const page = params.get('page');
+
+  if (page === 'github-setup') {
+    return <GithubSetup />;
   }
 
   if (currentPage === 'payment') {
