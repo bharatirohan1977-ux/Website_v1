@@ -6,6 +6,7 @@ import InternshipListing from './components/InternshipListing';
 import Contact from './components/Contact';
 import Navigation from './components/Navigation';
 import PaymentPage from './components/PaymentPage';
+import GithubSetup from './components/GithubSetup';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<'home' | 'payment'>('home');
@@ -15,6 +16,11 @@ function App() {
     setSelectedInternship(internship);
     setCurrentPage('payment');
   };
+  
+  const path = window.location.pathname;
+  if (path === '/github-setup') {
+  return <GithubSetup />;
+  }
 
   if (currentPage === 'payment') {
     return <PaymentPage onBack={() => setCurrentPage('home')} internship={selectedInternship} />;
