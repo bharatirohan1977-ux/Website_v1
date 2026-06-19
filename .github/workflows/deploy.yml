@@ -37,12 +37,12 @@ jobs:
         run: npm run build
 
       - name: Verify Secret Exists
-        run:
+        run: |
           if [ -z "${{ secrets.ENROLLMENT_WEBHOOK }}" ]; then
             echo "SECRET EMPTY"
             exit 1
           else
-            echo "${{ secrets.ENROLLMENT_WEBHOOK }}"
+            echo "SECRET FOUND"
           fi
 
       - name: Setup Pages
