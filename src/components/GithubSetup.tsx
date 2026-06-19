@@ -16,6 +16,17 @@ export default function GithubSetup() {
     }
   }, []);
 
+  // ✅ redirect after success
+  useEffect(() => {
+    if (submitted) {
+      const timer = setTimeout(() => {
+        window.location.href = "https://unofficialoffice.in";
+      }, 5000); // 5 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [submitted]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -50,16 +61,26 @@ export default function GithubSetup() {
     }
   };
 
+  // ✅ SUCCESS SCREEN
   if (submitted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="bg-white p-8 rounded-xl shadow-lg text-center">
-          <h1 className="text-2xl font-bold mb-4">
-            Thank You 🎉
+
+          <div className="text-green-500 text-5xl mb-4">✔</div>
+
+          <h1 className="text-2xl font-bold mb-2">
+            Submitted Successfully 🎉
           </h1>
-          <p>
-            Your GitHub username has been submitted successfully.
+
+          <p className="text-slate-600">
+            Your GitHub username has been saved.
           </p>
+
+          <p className="text-sm text-slate-400 mt-3">
+            Redirecting to home in 5 seconds...
+          </p>
+
         </div>
       </div>
     );
