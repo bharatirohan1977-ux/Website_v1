@@ -36,6 +36,15 @@ jobs:
           VITE_ENROLLMENT_WEBHOOK: ${{ secrets.ENROLLMENT_WEBHOOK }}
         run: npm run build
 
+      - name: Verify Secret Exists
+        run:
+          if [ -z "${{ secrets.ENROLLMENT_WEBHOOK }}" ]; then
+            echo "SECRET EMPTY"
+            exit 1
+          else
+            echo "${{ secrets.ENROLLMENT_WEBHOOK }}"
+          fi
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
