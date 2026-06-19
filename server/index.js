@@ -46,6 +46,7 @@ app.post('/api/enroll', async (req, res) => {
       lastName,
       email,
       phone,
+      githubUsername,
       college,
       year,
       program,
@@ -63,7 +64,7 @@ app.post('/api/enroll', async (req, res) => {
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
-      range: 'Sheet1!A:K',
+      range: 'Sheet1!A:L',
       valueInputOption: 'USER_ENTERED',
       requestBody: {
         values: [[
@@ -71,6 +72,7 @@ app.post('/api/enroll', async (req, res) => {
           lastName || '',
           email,
           phone || '',
+          githubUsername || '',
           college || '',
           year || '',
           program,

@@ -1,4 +1,4 @@
-import { ArrowLeft, Mail, User, Phone, Building2, BookOpen } from 'lucide-react';
+import { ArrowLeft, Mail, User, Phone, Building2, BookOpen, Github } from 'lucide-react';
 import { internships } from '../data/internships';
 import { Internship } from '../types/internship';
 import { useEffect, useState } from 'react';
@@ -14,6 +14,7 @@ export default function PaymentPage({ onBack, internship }: PaymentPageProps) {
     lastName: '',
     email: '',
     phone: '',
+    githubUsername: '',
     college: '',
     year: '',
     programme: internship?.title ?? ''
@@ -262,7 +263,27 @@ const handleSubmit = async (e: React.FormEvent) => {
                   />
                 </div>
               </div>
-
+              
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  GitHub Username (optional)
+                </label>
+                <div className="relative">
+                  <Github
+                    className="absolute left-4 top-3 text-slate-400"
+                    size={20}
+                  />
+                  <input
+                    type="text"
+                    name="githubUsername"
+                    value={formData.githubUsername}
+                    onChange={handleChange}
+                    className="w-full pl-12 pr-4 py-3 rounded-lg border-2 border-slate-300 focus:border-amber-500 focus:outline-none transition-colors"
+                    placeholder="john-doe123"
+                  />
+                </div>
+              </div>
+                            
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
                   College/University
